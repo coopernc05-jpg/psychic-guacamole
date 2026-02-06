@@ -150,8 +150,11 @@ async def main():
     logger.info("")
     logger.info(f"Total Invested: ${stats['total_invested']:.2f}")
     logger.info(f"Expected Returns: ${stats['expected_returns']:.2f}")
-    logger.info(f"Expected Profit: ${stats['expected_profit']:.2f} "
-               f"({stats['expected_profit']/stats['total_invested']:.2%})")
+    if stats['total_invested'] > 0:
+        profit_pct = stats['expected_profit'] / stats['total_invested']
+        logger.info(f"Expected Profit: ${stats['expected_profit']:.2f} ({profit_pct:.2%})")
+    else:
+        logger.info(f"Expected Profit: ${stats['expected_profit']:.2f} (N/A)")
     logger.info("")
     logger.info("=" * 80)
     logger.info("Demo completed successfully!")

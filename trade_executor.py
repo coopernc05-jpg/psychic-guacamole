@@ -209,7 +209,7 @@ class TradeExecutor:
             
             # For cross-market, we typically buy YES on both
             for i, market_id in enumerate(markets):
-                price_key = f'market{i+1}_yes_ask' if i == 0 else f'market{i}_yes_ask'
+                price_key = f'market{i+1}_yes_ask'
                 price = details.get(price_key, 0.5)
                 
                 orders.append(TradeOrder(
