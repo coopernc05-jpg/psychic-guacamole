@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 
 from polymarket_client import PolymarketWSClient
 from arbitrage_detector import ArbitrageDetector, ArbitrageOpportunity
+from trade_executor import TradeExecutor
 
 # Configure logging
 logging.basicConfig(
@@ -27,12 +28,29 @@ class PolymarketArbitrageBot:
         load_dotenv()
         
         self.ws_url = os.getenv('POLYMARKET_WS_URL', 'wss://ws-subscriptions-clob.polymarket.com/ws/market')
+        self.api_url = os.getenv('POLYMARKET_API_URL', 'https://clob.polymarket.com')
         self.min_profit_threshold = float(os.getenv('MIN_PROFIT_THRESHOLD', '0.01'))
+        
+        # Trading configuration
+        self.auto_trading_enabled = os.getenv('AUTO_TRADING_ENABLED', 'false').lower() == 'true'
+        self.dry_run = os.getenv('DRY_RUN', 'true').lower() == 'true'
+        self.max_trade_size = float(os.getenv('MAX_TRADE_SIZE', '100.0'))
+        self.api_key = os.getenv('POLYMARKET_API_KEY')
+        self.private_key = os.getenv('POLYMARKET_PRIVATE_KEY')
         
         # Initialize components
         self.ws_client = PolymarketWSClient(self.ws_url)
         self.arbitrage_detector = ArbitrageDetector(
             min_profit_threshold=self.min_profit_threshold
+        )
+        
+        # Initialize trade executor
+        self.trade_executor = TradeExecutor(
+            api_url=self.api_url,
+            api_key=self.api_key,
+            private_key=self.private_key,
+            max_trade_size=self.max_trade_size,
+            dry_run=self.dry_run
         )
         
         # Add price callback
@@ -66,7 +84,7 @@ class PolymarketArbitrageBot:
             # Check if this is a new opportunity (simple deduplication)
             if not self._is_duplicate_opportunity(opp):
                 self.detected_opportunities.append(opp)
-                self.alert_opportunity(opp)
+                await self.alert_opportunity(opp)
     
     def _is_duplicate_opportunity(self, opp: ArbitrageOpportunity) -> bool:
         """Check if opportunity is similar to recently detected ones"""
@@ -79,7 +97,7 @@ class PolymarketArbitrageBot:
                 return True
         return False
     
-    def alert_opportunity(self, opportunity: ArbitrageOpportunity):
+    async def alert_opportunity(self, opportunity: ArbitrageOpportunity):
         """Alert when an arbitrage opportunity is detected"""
         logger.info("=" * 80)
         logger.info(f"🚨 ARBITRAGE OPPORTUNITY DETECTED!")
@@ -88,6 +106,22 @@ class PolymarketArbitrageBot:
         logger.info(f"Markets Involved: {len(opportunity.markets)}")
         logger.info(f"Details: {opportunity.details}")
         logger.info("=" * 80)
+        
+        # Execute trade if auto-trading is enabled
+        if self.auto_trading_enabled:
+            logger.info("⚡ Auto-trading is ENABLED - executing trade...")
+            async with self.trade_executor:
+                result = await self.trade_executor.execute_opportunity(opportunity)
+                
+                if result.success:
+                    logger.info(f"✅ Trade executed successfully!")
+                    logger.info(f"   Invested: ${result.total_invested:.2f}")
+                    logger.info(f"   Expected Return: ${result.expected_return:.2f}")
+                    logger.info(f"   Expected Profit: ${result.expected_return - result.total_invested:.2f}")
+                else:
+                    logger.error(f"❌ Trade execution failed: {result.error_message}")
+        else:
+            logger.info("ℹ️  Auto-trading is DISABLED - no trade executed")
     
     async def subscribe_to_markets(self, market_ids: List[str]):
         """Subscribe to a list of market IDs"""
@@ -131,6 +165,18 @@ class PolymarketArbitrageBot:
         if self.detected_opportunities:
             total_profit = sum(opp.expected_profit for opp in self.detected_opportunities)
             logger.info(f"Total potential profit: {total_profit:.4%}")
+        
+        # Print execution statistics if trading was enabled
+        if self.auto_trading_enabled:
+            stats = self.trade_executor.get_execution_stats()
+            logger.info("\nTrading Statistics:")
+            logger.info(f"  Total Executions: {stats['total_executions']}")
+            logger.info(f"  Successful: {stats['successful']}")
+            logger.info(f"  Failed: {stats['failed']}")
+            logger.info(f"  Success Rate: {stats['success_rate']:.1%}")
+            logger.info(f"  Total Invested: ${stats['total_invested']:.2f}")
+            logger.info(f"  Expected Returns: ${stats['expected_returns']:.2f}")
+            logger.info(f"  Expected Profit: ${stats['expected_profit']:.2f}")
     
     def get_opportunities(self) -> List[ArbitrageOpportunity]:
         """Get all detected opportunities"""
@@ -158,6 +204,13 @@ async def main():
     logger.info("  ✓ YES/NO imbalance arbitrage detection")
     logger.info("  ✓ Multi-leg arbitrage detection")
     logger.info("  ✓ Real-time WebSocket monitoring")
+    logger.info("  ✓ Automatic trade execution")
+    logger.info("")
+    logger.info("Configuration:")
+    logger.info(f"  Auto-Trading: {'ENABLED' if bot.auto_trading_enabled else 'DISABLED'}")
+    logger.info(f"  Mode: {'DRY-RUN' if bot.dry_run else 'LIVE TRADING'}")
+    logger.info(f"  Max Trade Size: ${bot.max_trade_size:.2f}")
+    logger.info(f"  Min Profit Threshold: {bot.min_profit_threshold:.1%}")
     logger.info("")
     logger.info("=" * 80)
     
