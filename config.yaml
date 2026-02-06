@@ -1,0 +1,62 @@
+# Polymarket Arbitrage Bot Configuration
+
+# Profit Maximization Settings
+min_profit_threshold: 5.0  # Minimum net profit in USD
+position_sizing_strategy: "kelly"  # kelly, fixed, percentage
+kelly_fraction: 0.25  # Fraction of Kelly to use (0.25 = quarter Kelly)
+max_position_size: 1000  # Max USD per trade
+max_total_exposure: 5000  # Max total USD at risk
+
+# Arbitrage Detection
+strategies:
+  - cross_market
+  - yes_no_imbalance
+  - multi_leg
+  - correlated_events
+min_arbitrage_percentage: 0.5  # Minimum 0.5% profit margin
+
+# Market Monitoring
+websocket_enabled: true
+markets_to_monitor: "all"  # "all" or list specific categories like ["politics", "sports"]
+refresh_interval: 1  # seconds for non-websocket updates
+max_markets: 100  # Maximum number of markets to monitor simultaneously
+
+# Risk Management
+max_slippage: 0.02  # 2% maximum slippage
+safety_margin: 1.5  # Profit must be 1.5x costs
+stop_loss_percentage: 0.05  # 5% stop loss
+max_position_age_hours: 24  # Auto-close positions after 24 hours
+
+# Execution
+mode: "alert"  # "alert" or "auto_trade"
+gas_price_limit: 100  # Maximum gwei for gas
+order_type: "limit"  # "market" or "limit"
+execution_timeout: 30  # seconds to wait for order execution
+
+# Gas & Fee Settings
+polygon_rpc_url: "https://polygon-rpc.com"
+gas_safety_buffer: 1.2  # Multiply estimated gas by this factor
+
+# Notifications
+discord_webhook: ""  # Discord webhook URL
+telegram_bot_token: ""  # Telegram bot token
+telegram_chat_id: ""  # Telegram chat ID
+alert_on_opportunities: true
+alert_on_executions: true
+alert_on_errors: true
+
+# Logging
+log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+log_file: "logs/arbitrage_bot.log"
+log_rotation: "100 MB"
+
+# API Settings
+polymarket_api_url: "https://clob.polymarket.com"
+polymarket_ws_url: "wss://ws-subscriptions-clob.polymarket.com/ws"
+api_timeout: 10  # seconds
+api_retry_attempts: 3
+
+# Performance Tracking
+enable_analytics: true
+analytics_db_path: "data/analytics.db"
+track_missed_opportunities: true
