@@ -35,15 +35,49 @@ A comprehensive arbitrage detection and execution bot for Polymarket that **maxi
 - Performance metrics: P&L, ROI, Sharpe ratio, win rate
 - Market efficiency statistics
 - Daily performance reports
+- **Web Dashboard**: Real-time visualization with Chart.js
 
 ### Notifications
 - Discord webhook integration
 - Telegram bot support
 - Alerts for opportunities, executions, and errors
 
+### Production Infrastructure
+- **Docker Support**: Containerized deployment with Docker Compose
+- **CI/CD Pipeline**: Automated testing and deployment via GitHub Actions
+- **Health Monitoring**: Health check endpoints and Prometheus metrics
+- **Centralized Logging**: Log rotation and structured logging
+
 ## 🚀 Quick Start
 
 ### Installation
+
+#### Option 1: Docker (Recommended for Production)
+
+1. Clone the repository:
+```bash
+git clone https://github.com/coopernc05-jpg/psychic-guacamole.git
+cd psychic-guacamole
+```
+
+2. Configure the bot:
+```bash
+cp .env.example .env
+# Edit .env with your API keys and settings
+```
+
+3. Start with Docker Compose:
+```bash
+docker-compose up -d
+```
+
+4. View logs and access dashboard:
+```bash
+docker-compose logs -f bot
+# Dashboard: http://localhost:5000
+```
+
+#### Option 2: Local Development
 
 1. Clone the repository:
 ```bash
@@ -72,6 +106,13 @@ python -m src.main
 ```
 
 The bot will detect and log opportunities without executing trades.
+
+**Dashboard Access**:
+Open http://localhost:5000 in your browser to view:
+- Real-time performance metrics
+- Equity curve visualization
+- Opportunity distribution charts
+- Live activity feed
 
 **Auto-Trade Mode** (requires wallet setup):
 1. Complete the setup in `docs/SETUP.md`
@@ -146,6 +187,9 @@ See `config.yaml` for all available options.
 - **[SETUP.md](docs/SETUP.md)**: Detailed setup instructions for Polymarket API, wallet, and notifications
 - **[STRATEGIES.md](docs/STRATEGIES.md)**: In-depth explanation of each arbitrage strategy with examples
 - **[API.md](docs/API.md)**: API reference and integration guide
+- **[DASHBOARD.md](docs/DASHBOARD.md)**: Web dashboard usage and features
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**: Production deployment guides (Docker, VPS, Kubernetes)
+- **[TESTING.md](docs/TESTING.md)**: Testing methodology and examples
 
 ## 🏗️ Architecture
 
@@ -177,13 +221,47 @@ src/
 
 Run tests:
 ```bash
+# All tests
 pytest tests/
+
+# With coverage report
+pytest --cov=src --cov-report=html tests/
+
+# View coverage
+open htmlcov/index.html
 ```
 
-Run with coverage:
+Run linters:
 ```bash
-pytest --cov=src tests/
+# Code formatting
+black src/ tests/
+
+# Linting
+flake8 src/ tests/
+
+# Type checking
+mypy src/
 ```
+
+See [TESTING.md](docs/TESTING.md) for detailed testing guide.
+
+## 🐳 Docker Deployment
+
+```bash
+# Build image
+docker build -t polymarket-bot .
+
+# Run with Docker Compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f bot
+
+# Stop
+docker-compose down
+```
+
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment guide.
 
 ## 🤝 Contributing
 
