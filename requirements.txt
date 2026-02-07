@@ -29,3 +29,19 @@ pytest-cov>=4.1.0
 # Type Checking
 mypy>=1.7.0
 types-PyYAML>=6.0.0
+types-requests>=2.31.0
+
+# Web Dashboard
+flask>=3.0.0
+flask-cors>=4.0.0
+flask-socketio>=5.3.0
+
+# Production Server
+gunicorn>=21.0.0
+
+# Code Quality
+black>=23.0.0
+flake8>=6.0.0
+
+# Monitoring
+prometheus-client>=0.17.0
