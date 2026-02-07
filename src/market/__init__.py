@@ -7,7 +7,7 @@ from .market_data import (
     Trade,
     Position,
     OrderSide,
-    OrderType
+    OrderType,
 )
 
 __all__ = [
@@ -17,5 +17,5 @@ __all__ = [
     "Trade",
     "Position",
     "OrderSide",
-    "OrderType"
+    "OrderType",
 ]

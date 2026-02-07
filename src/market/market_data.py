@@ -8,6 +8,7 @@ from typing import Optional, Dict, Any
 
 class MarketStatus(Enum):
     """Market status enumeration."""
+
     ACTIVE = "active"
     CLOSED = "closed"
     RESOLVED = "resolved"
@@ -16,12 +17,14 @@ class MarketStatus(Enum):
 
 class OrderSide(Enum):
     """Order side enumeration."""
+
     BUY = "BUY"
     SELL = "SELL"
 
 
 class OrderType(Enum):
     """Order type enumeration."""
+
     MARKET = "MARKET"
     LIMIT = "LIMIT"
 
@@ -29,7 +32,7 @@ class OrderType(Enum):
 @dataclass
 class Market:
     """Represents a Polymarket market."""
-    
+
     market_id: str
     question: str
     description: str
@@ -45,17 +48,17 @@ class Market:
     volume_24h: float
     liquidity: float
     metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     @property
     def spread(self) -> float:
         """Calculate the bid-ask spread."""
         return (self.yes_ask - self.yes_bid) + (self.no_ask - self.no_bid)
-    
+
     @property
     def price_sum(self) -> float:
         """Sum of YES and NO prices (should be ~1.0)."""
         return self.yes_price + self.no_price
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert market to dictionary."""
         return {
@@ -73,30 +76,30 @@ class Market:
             "no_ask": self.no_ask,
             "volume_24h": self.volume_24h,
             "liquidity": self.liquidity,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 @dataclass
 class OrderBook:
     """Order book for a market outcome."""
-    
+
     market_id: str
     outcome: str  # "YES" or "NO"
     bids: list[tuple[float, float]]  # [(price, size), ...]
     asks: list[tuple[float, float]]  # [(price, size), ...]
     timestamp: datetime = field(default_factory=datetime.now)
-    
+
     @property
     def best_bid(self) -> Optional[tuple[float, float]]:
         """Get best bid (highest price)."""
         return max(self.bids, key=lambda x: x[0]) if self.bids else None
-    
+
     @property
     def best_ask(self) -> Optional[tuple[float, float]]:
         """Get best ask (lowest price)."""
         return min(self.asks, key=lambda x: x[0]) if self.asks else None
-    
+
     @property
     def mid_price(self) -> Optional[float]:
         """Calculate mid price."""
@@ -110,7 +113,7 @@ class OrderBook:
 @dataclass
 class Trade:
     """Represents a trade execution."""
-    
+
     trade_id: str
     market_id: str
     outcome: str
@@ -119,12 +122,12 @@ class Trade:
     size: float
     timestamp: datetime
     gas_cost: float = 0.0
-    
+
     @property
     def total_cost(self) -> float:
         """Total cost including gas."""
         return (self.price * self.size) + self.gas_cost
-    
+
     @property
     def net_amount(self) -> float:
         """Net amount (positive for buys, negative for sells)."""
@@ -137,7 +140,7 @@ class Trade:
 @dataclass
 class Position:
     """Represents a trading position."""
-    
+
     position_id: str
     market_id: str
     outcome: str
@@ -149,19 +152,19 @@ class Position:
     exit_time: Optional[datetime] = None
     realized_pnl: Optional[float] = None
     gas_costs: float = 0.0
-    
+
     @property
     def unrealized_pnl(self) -> float:
         """Calculate unrealized P&L."""
         if self.exit_price is not None:
             return 0.0  # Position is closed
         return (self.current_price - self.entry_price) * self.size - self.gas_costs
-    
+
     @property
     def is_open(self) -> bool:
         """Check if position is still open."""
         return self.exit_price is None
-    
+
     @property
     def return_pct(self) -> float:
         """Calculate return percentage."""
