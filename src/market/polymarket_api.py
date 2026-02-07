@@ -323,6 +323,7 @@ class PolymarketAPIClient:
             no_ask = 0.52
             
             # Try to get real-time prices from CLOB API if we have token IDs
+            prices_from_clob = False
             if token_ids and len(token_ids) >= 2:
                 # First token is typically YES, second is NO
                 yes_token_id = token_ids[0]
@@ -337,27 +338,19 @@ class PolymarketAPIClient:
                         yes_bid = yes_book.best_bid[0]
                         yes_ask = yes_book.best_ask[0]
                         yes_price = (yes_bid + yes_ask) / 2
+                        prices_from_clob = True
                     
                     if no_book and no_book.best_bid and no_book.best_ask:
                         no_bid = no_book.best_bid[0]
                         no_ask = no_book.best_ask[0]
                         no_price = (no_bid + no_ask) / 2
+                        prices_from_clob = True
                 
                 except Exception as e:
                     logger.debug(f"Could not fetch CLOB prices for {condition_id}: {e}")
-                    # Fall back to prices from Gamma API if available
-                    outcome_prices = data.get("outcomePrices", data.get("prices", []))
-                    if outcome_prices and len(outcome_prices) >= 2:
-                        yes_price = float(outcome_prices[0]) if outcome_prices[0] else 0.5
-                        no_price = float(outcome_prices[1]) if outcome_prices[1] else 0.5
-                        # Estimate bid/ask spread
-                        spread = 0.04
-                        yes_bid = max(0.01, yes_price - spread / 2)
-                        yes_ask = min(0.99, yes_price + spread / 2)
-                        no_bid = max(0.01, no_price - spread / 2)
-                        no_ask = min(0.99, no_price + spread / 2)
-            else:
-                # Use prices from Gamma API if no token IDs
+            
+            # Fall back to Gamma API prices if CLOB prices unavailable
+            if not prices_from_clob:
                 outcome_prices = data.get("outcomePrices", data.get("prices", []))
                 if outcome_prices and len(outcome_prices) >= 2:
                     yes_price = float(outcome_prices[0]) if outcome_prices[0] else 0.5
