@@ -39,7 +39,8 @@ async def test_api():
         if markets:
             print("Sample markets:")
             for i, market in enumerate(markets[:5], 1):
-                print(f"\n{i}. {market.question[:70]}...")
+                question_display = market.question if len(market.question) <= 70 else f"{market.question[:70]}..."
+                print(f"\n{i}. {question_display}")
                 print(f"   Market ID: {market.market_id}")
                 print(f"   Category: {market.category}")
                 print(f"   Status: {market.status.value}")

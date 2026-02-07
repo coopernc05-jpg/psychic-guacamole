@@ -164,7 +164,8 @@ class PolymarketAPIClient:
                     if market:
                         markets.append(market)
                 except Exception as e:
-                    logger.warning(f"Failed to parse market {market_data.get('id', 'unknown')}: {e}")
+                    market_id = market_data.get('conditionId', market_data.get('condition_id', market_data.get('id', 'unknown')))
+                    logger.warning(f"Failed to parse market {market_id}: {e}")
                     continue
             
             logger.info(f"Successfully parsed {len(markets)} markets with price data")
@@ -304,7 +305,7 @@ class PolymarketAPIClient:
             end_date_str = data.get("endDate", data.get("end_date", data.get("endTime", "")))
             try:
                 end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
-            except:
+            except (ValueError, TypeError):
                 end_date = datetime.now()
             
             # Get volume and liquidity
