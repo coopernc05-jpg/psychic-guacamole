@@ -15,7 +15,7 @@ def config():
         polymarket_api_url="https://clob.polymarket.com",
         api_timeout=10,
         api_retry_attempts=3,
-        polymarket_api_key="test_key"
+        polymarket_api_key="test_key",
     )
 
 
@@ -41,7 +41,7 @@ def sample_gamma_market():
         "closed": False,
         "resolved": False,
         "accepting_orders": True,
-        "endDate": "2026-12-31T23:59:59Z"
+        "endDate": "2026-12-31T23:59:59Z",
     }
 
 
@@ -49,14 +49,8 @@ def sample_gamma_market():
 def sample_orderbook():
     """Sample order book from CLOB API."""
     return {
-        "bids": [
-            {"price": "0.61", "size": "1000"},
-            {"price": "0.60", "size": "2000"}
-        ],
-        "asks": [
-            {"price": "0.63", "size": "1500"},
-            {"price": "0.64", "size": "3000"}
-        ]
+        "bids": [{"price": "0.61", "size": "1000"}, {"price": "0.60", "size": "2000"}],
+        "asks": [{"price": "0.63", "size": "1500"}, {"price": "0.64", "size": "3000"}],
     }
 
 
@@ -64,11 +58,13 @@ def sample_orderbook():
 async def test_parse_market_with_prices_basic(api_client, sample_gamma_market):
     """Test parsing market data from Gamma API without CLOB prices."""
     # Mock get_order_book to return None (CLOB unavailable)
-    with patch.object(api_client, 'get_order_book', new_callable=AsyncMock) as mock_book:
+    with patch.object(
+        api_client, "get_order_book", new_callable=AsyncMock
+    ) as mock_book:
         mock_book.return_value = None
-        
+
         market = await api_client._parse_market_with_prices(sample_gamma_market)
-        
+
         assert market is not None
         assert market.market_id == "0x123abc"
         assert market.question == "Will Bitcoin reach $100k in 2026?"
@@ -84,33 +80,37 @@ async def test_parse_market_with_prices_basic(api_client, sample_gamma_market):
 
 
 @pytest.mark.asyncio
-async def test_parse_market_with_orderbook(api_client, sample_gamma_market, sample_orderbook):
+async def test_parse_market_with_orderbook(
+    api_client, sample_gamma_market, sample_orderbook
+):
     """Test parsing market with real-time order book prices."""
     from src.market.market_data import OrderBook
-    
+
     # Create mock order books
     yes_book = OrderBook(
         market_id="token_yes_123",
         outcome="YES",
         bids=[(0.61, 1000), (0.60, 2000)],
         asks=[(0.63, 1500), (0.64, 3000)],
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )
-    
+
     no_book = OrderBook(
         market_id="token_no_456",
         outcome="NO",
         bids=[(0.37, 1000), (0.36, 2000)],
         asks=[(0.39, 1500), (0.40, 3000)],
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )
-    
+
     # Mock get_order_book to return order books
-    with patch.object(api_client, 'get_order_book', new_callable=AsyncMock) as mock_book:
+    with patch.object(
+        api_client, "get_order_book", new_callable=AsyncMock
+    ) as mock_book:
         mock_book.side_effect = [yes_book, no_book]
-        
+
         market = await api_client._parse_market_with_prices(sample_gamma_market)
-        
+
         assert market is not None
         # Prices should come from order books
         assert market.yes_bid == 0.61
@@ -130,9 +130,9 @@ async def test_skip_inactive_markets(api_client):
         "closed": True,
         "resolved": False,
         "clobTokenIds": [],
-        "outcomePrices": [0.5, 0.5]
+        "outcomePrices": [0.5, 0.5],
     }
-    
+
     market = await api_client._parse_market_with_prices(inactive_market)
     assert market is None
 
@@ -146,9 +146,9 @@ async def test_skip_resolved_markets(api_client):
         "closed": True,
         "resolved": True,
         "clobTokenIds": [],
-        "outcomePrices": [1.0, 0.0]
+        "outcomePrices": [1.0, 0.0],
     }
-    
+
     market = await api_client._parse_market_with_prices(resolved_market)
     assert market is None
 
@@ -163,7 +163,7 @@ async def test_get_markets_with_mock_response(api_client):
             "clobTokenIds": [],
             "outcomePrices": [0.55, 0.45],
             "closed": False,
-            "resolved": False
+            "resolved": False,
         },
         {
             "conditionId": "0x222",
@@ -171,17 +171,19 @@ async def test_get_markets_with_mock_response(api_client):
             "clobTokenIds": [],
             "outcomePrices": [0.30, 0.70],
             "closed": False,
-            "resolved": False
-        }
+            "resolved": False,
+        },
     ]
-    
-    with patch.object(api_client, '_request', new_callable=AsyncMock) as mock_request:
-        with patch.object(api_client, 'get_order_book', new_callable=AsyncMock) as mock_book:
+
+    with patch.object(api_client, "_request", new_callable=AsyncMock) as mock_request:
+        with patch.object(
+            api_client, "get_order_book", new_callable=AsyncMock
+        ) as mock_book:
             mock_request.return_value = mock_response
             mock_book.return_value = None
-            
+
             markets = await api_client.get_markets(limit=10)
-            
+
             assert len(markets) == 2
             assert markets[0].market_id == "0x111"
             assert markets[1].market_id == "0x222"
@@ -192,11 +194,11 @@ async def test_get_markets_with_mock_response(api_client):
 @pytest.mark.asyncio
 async def test_error_handling(api_client):
     """Test error handling when API fails."""
-    with patch.object(api_client, '_request', new_callable=AsyncMock) as mock_request:
+    with patch.object(api_client, "_request", new_callable=AsyncMock) as mock_request:
         mock_request.side_effect = Exception("Network error")
-        
+
         markets = await api_client.get_markets()
-        
+
         # Should return empty list on error, not raise exception
         assert markets == []
 
@@ -207,7 +209,7 @@ def test_rate_limiting(api_client):
     assert api_client._last_request_time == 0
 
 
-@pytest.mark.asyncio  
+@pytest.mark.asyncio
 async def test_api_urls(api_client):
     """Test that API URLs are correctly configured."""
     assert api_client.clob_url == "https://clob.polymarket.com"

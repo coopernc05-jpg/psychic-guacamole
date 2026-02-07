@@ -13,5 +13,5 @@ __all__ = [
     "MultiLegStrategy",
     "MultiLegOpportunity",
     "CorrelatedEventsStrategy",
-    "CorrelatedEventsOpportunity"
+    "CorrelatedEventsOpportunity",
 ]
