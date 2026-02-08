@@ -10,10 +10,14 @@ from .strategies import (
     YesNoImbalanceStrategy,
     MultiLegStrategy,
     CorrelatedEventsStrategy,
+    OrderBookSpreadStrategy,
+    TimeBasedStrategy,
     CrossMarketOpportunity,
     YesNoImbalanceOpportunity,
     MultiLegOpportunity,
     CorrelatedEventsOpportunity,
+    OrderBookSpreadOpportunity,
+    TimeBasedOpportunity,
 )
 
 # Type alias for all opportunity types
@@ -22,6 +26,8 @@ Opportunity = Union[
     YesNoImbalanceOpportunity,
     MultiLegOpportunity,
     CorrelatedEventsOpportunity,
+    OrderBookSpreadOpportunity,
+    TimeBasedOpportunity,
 ]
 
 
@@ -56,6 +62,20 @@ class ArbitrageDetector:
         if "correlated_events" in config.strategies:
             self.strategies.append(
                 CorrelatedEventsStrategy(min_profit_pct=config.min_arbitrage_percentage)
+            )
+
+        if "order_book_spread" in config.strategies:
+            self.strategies.append(
+                OrderBookSpreadStrategy(
+                    min_spread_pct=2.0, min_profit_pct=config.min_arbitrage_percentage
+                )
+            )
+
+        if "time_based" in config.strategies:
+            self.strategies.append(
+                TimeBasedStrategy(
+                    min_profit_pct=config.min_arbitrage_percentage, time_window_hours=24.0
+                )
             )
 
         logger.info(f"Initialized {len(self.strategies)} arbitrage strategies")
@@ -146,6 +166,10 @@ class ArbitrageDetector:
             gas_units = 100000 * len(opportunity.legs)
         elif isinstance(opportunity, CorrelatedEventsOpportunity):
             gas_units = 200000  # Two related transactions
+        elif isinstance(opportunity, OrderBookSpreadOpportunity):
+            gas_units = 100000  # Single limit order
+        elif isinstance(opportunity, TimeBasedOpportunity):
+            gas_units = 150000  # Quick market order
         else:
             gas_units = 150000  # Default
 
