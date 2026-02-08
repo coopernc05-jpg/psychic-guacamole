@@ -16,47 +16,56 @@ async def test_api():
     """Test the Polymarket API client."""
     print("Loading configuration...")
     config = load_config()
-    
+
     print(f"Gamma API URL: https://gamma-api.polymarket.com")
     print(f"CLOB API URL: {config.polymarket_api_url}")
     print(f"API Key: {'Set' if config.polymarket_api_key else 'Not set'}")
     print()
-    
+
     print("Initializing API client...")
     client = PolymarketAPIClient(config)
-    
+
     try:
         await client.connect()
         print("✓ Connected to API\n")
-        
+
         print("Fetching markets (limit=10)...")
         markets = await client.get_markets(limit=10)
-        
+
         print(f"\n{'='*80}")
         print(f"RESULTS: Fetched {len(markets)} markets")
         print(f"{'='*80}\n")
-        
+
         if markets:
             print("Sample markets:")
             for i, market in enumerate(markets[:5], 1):
-                question_display = market.question if len(market.question) <= 70 else f"{market.question[:70]}..."
+                question_display = (
+                    market.question
+                    if len(market.question) <= 70
+                    else f"{market.question[:70]}..."
+                )
                 print(f"\n{i}. {question_display}")
                 print(f"   Market ID: {market.market_id}")
                 print(f"   Category: {market.category}")
                 print(f"   Status: {market.status.value}")
-                print(f"   YES Price: ${market.yes_price:.3f} (Bid: ${market.yes_bid:.3f}, Ask: ${market.yes_ask:.3f})")
-                print(f"   NO Price:  ${market.no_price:.3f} (Bid: ${market.no_bid:.3f}, Ask: ${market.no_ask:.3f})")
+                print(
+                    f"   YES Price: ${market.yes_price:.3f} (Bid: ${market.yes_bid:.3f}, Ask: ${market.yes_ask:.3f})"
+                )
+                print(
+                    f"   NO Price:  ${market.no_price:.3f} (Bid: ${market.no_bid:.3f}, Ask: ${market.no_ask:.3f})"
+                )
                 print(f"   Volume 24h: ${market.volume_24h:,.2f}")
                 print(f"   Liquidity: ${market.liquidity:,.2f}")
                 print(f"   Price Sum: {market.price_sum:.3f} (should be ~1.0)")
         else:
             print("❌ No markets fetched! Check API configuration and logs.")
-        
+
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
-    
+
     finally:
         await client.close()
         print("\n✓ Closed API connection")

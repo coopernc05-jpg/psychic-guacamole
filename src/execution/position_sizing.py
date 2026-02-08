@@ -6,6 +6,14 @@ from loguru import logger
 
 from ..config import Config
 
+# Kelly Criterion constants for arbitrage
+# For arbitrage opportunities, downside risk is typically from fees and slippage, not full position loss
+ARBITRAGE_LOSS_FACTOR = 0.2  # Assume potential loss is 20% of expected profit
+
+# Conservative scaling factor for Kelly criterion in arbitrage scenarios
+# Accounts for model uncertainty and execution risks
+ARBITRAGE_KELLY_SCALING = 0.5  # Use 50% of calculated Kelly fraction
+
 
 def kelly_criterion(
     win_probability: float, win_return: float, loss_return: float = -1.0
@@ -113,11 +121,18 @@ class PositionSizer:
         win_return = profit_pct / 100
 
         # Use confidence as win probability
-        # For arbitrage, we expect high confidence, but account for execution risk
-        win_probability = confidence * 0.95  # Reduce by 5% for execution risk
+        win_probability = confidence
+
+        # For arbitrage, assume downside risk is smaller than upside
+        # Loss is typically from slippage, fees, not full position loss
+        loss_return = -win_return * ARBITRAGE_LOSS_FACTOR
 
         # Calculate Kelly fraction
-        kelly_f = kelly_criterion(win_probability, win_return)
+        kelly_f = kelly_criterion(win_probability, win_return, loss_return)
+
+        # Apply additional conservative factor for arbitrage
+        # This accounts for model uncertainty and execution risks
+        kelly_f = kelly_f * ARBITRAGE_KELLY_SCALING
 
         # Apply fractional Kelly (more conservative)
         fractional_kelly = kelly_f * self.kelly_fraction
