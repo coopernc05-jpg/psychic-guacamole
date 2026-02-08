@@ -5,10 +5,12 @@ A comprehensive arbitrage detection and execution bot for Polymarket that **maxi
 ## 🎯 Features
 
 ### Arbitrage Detection Strategies
-- **Cross-Market Arbitrage**: Detects price discrepancies for the same event across different markets
-- **YES/NO Imbalance Arbitrage**: Finds opportunities where YES + NO prices ≠ 1.00
-- **Multi-Leg Arbitrage**: Identifies complex arbitrage chains across 3+ related markets
-- **Correlated Event Arbitrage**: Detects mispricing in related events with dependencies
+- **Yes/No Price Imbalance**: Detects when YES price + NO price ≠ $1.00 (threshold: 0.3%)
+- **Cross-Market Arbitrage**: Finds price discrepancies for the same event across different markets (threshold: 0.5%)
+- **Order Book Spread Trading**: Market making strategy that captures bid-ask spreads (min spread: 2.0%, min profit: 0.5%)
+- **Multi-Leg Arbitrage**: Identifies complex arbitrage chains across 3+ related markets (threshold: 1.0%)
+- **Correlated Event Arbitrage**: Detects mispricing in related events with dependencies (threshold: 0.8%)
+- **Time-Based Arbitrage**: Monitors price changes near event resolution for panic selling and mispricing (threshold: 0.6%, 24h window)
 
 ### Profit Maximization Engine
 - **Kelly Criterion** position sizing for optimal long-term growth
