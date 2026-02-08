@@ -113,11 +113,19 @@ class PositionSizer:
         win_return = profit_pct / 100
 
         # Use confidence as win probability
-        # For arbitrage, we expect high confidence, but account for execution risk
-        win_probability = confidence * 0.95  # Reduce by 5% for execution risk
+        win_probability = confidence
+
+        # For arbitrage, assume downside risk is smaller than upside
+        # Loss is typically from slippage, fees, not full position loss
+        # Use 20% of the win_return as potential loss
+        loss_return = -win_return * 0.2
 
         # Calculate Kelly fraction
-        kelly_f = kelly_criterion(win_probability, win_return)
+        kelly_f = kelly_criterion(win_probability, win_return, loss_return)
+
+        # Apply additional conservative factor for arbitrage (0.5)
+        # This accounts for model uncertainty and execution risks
+        kelly_f = kelly_f * 0.5
 
         # Apply fractional Kelly (more conservative)
         fractional_kelly = kelly_f * self.kelly_fraction
