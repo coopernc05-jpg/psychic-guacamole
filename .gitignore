@@ -4,6 +4,10 @@ __pycache__/
 *$py.class
 *.so
 .Python
+venv/
+env/
+ENV/
+.env
 build/
 develop-eggs/
 dist/
@@ -29,7 +33,7 @@ ENV/
 # IDE
 .vscode/
 .idea/
-*.swp
+*.swphttps://github.com/coopernc05-jpg/psychic-guacamole/pull/1/conflict?name=.env.example&base_oid=6a27210c6d13e9d8449f4b0454a3a00690115058&head_oid=bf5ad6a907022d6b00ae50df0256a319da75ab12
 *.swo
 *~
 

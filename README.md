@@ -1,3 +1,27 @@
+# Polymarket Arbitrage Detection Bot
+
+A real-time arbitrage detection and automatic trading system for Polymarket that monitors multiple markets, identifies profitable trading opportunities, and can execute trades automatically.
+
+## Features
+
+### Multi-Market Arbitrage Detection
+- **Cross-Market Arbitrage**: Detects arbitrage opportunities across different markets for the same event
+- **YES/NO Imbalance Arbitrage**: Identifies pricing inefficiencies within a single market where YES + NO prices don't equal 1
+- **Multi-Leg Arbitrage**: Finds complex arbitrage opportunities across 3+ related markets
+
+### Real-Time Monitoring
+- **WebSocket Integration**: Maintains persistent connections to Polymarket for live price feeds
+- **Continuous Price Monitoring**: Tracks price changes across all subscribed markets in real-time
+- **Instant Alerts**: Immediately notifies when arbitrage opportunities are detected
+
+### Automatic Trade Execution (NEW!)
+- **Auto-Trading**: Automatically executes trades when arbitrage opportunities are detected
+- **Dry-Run Mode**: Test trading strategies without risking real money
+- **Smart Order Generation**: Creates optimal orders based on opportunity type
+- **Position Sizing**: Configurable maximum trade size with automatic scaling
+- **Execution Tracking**: Comprehensive logging and statistics for all trades
+
+## Installation
 # Polymarket Arbitrage Bot
 
 A comprehensive arbitrage detection and execution bot for Polymarket that **maximizes profit** through multiple arbitrage strategies, optimal position sizing, and automated risk management.
@@ -85,215 +109,188 @@ git clone https://github.com/coopernc05-jpg/psychic-guacamole.git
 cd psychic-guacamole
 ```
 
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies:
 2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Configure the bot:
+4. Configure environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your API keys and settings
+# Edit .env with your settings
 ```
 
-4. Review and customize `config.yaml` for your strategy preferences
+## Configuration
 
-### Running the Bot
+Edit `.env` to configure the bot:
 
-**Alert Mode** (recommended for testing):
-```bash
-python -m src.main
+```env
+# Polymarket Configuration
+POLYMARKET_WS_URL=wss://ws-subscriptions-clob.polymarket.com/ws/market
+POLYMARKET_API_URL=https://clob.polymarket.com
+
+# API Authentication (required for live trading)
+POLYMARKET_API_KEY=your_api_key_here
+POLYMARKET_PRIVATE_KEY=your_private_key_here
+
+# Arbitrage Detection Settings
+MIN_PROFIT_THRESHOLD=0.01    # Minimum profit (1%) to alert
+MAX_SPREAD_THRESHOLD=0.05    # Maximum spread to consider
+
+# Trading Settings
+AUTO_TRADING_ENABLED=false   # Set to 'true' to enable automatic trading
+DRY_RUN=true                 # Set to 'false' for live trading (BE CAREFUL!)
+MAX_TRADE_SIZE=100.0         # Maximum amount in USD to invest per opportunity
 ```
 
-The bot will detect and log opportunities without executing trades.
+### ⚠️ IMPORTANT SAFETY NOTES
 
-**Dashboard Access**:
-Open http://localhost:5000 in your browser to view:
-- Real-time performance metrics
-- Equity curve visualization
-- Opportunity distribution charts
-- Live activity feed
+- **Always start with `DRY_RUN=true`** to test without risking real money
+- **Start with small `MAX_TRADE_SIZE`** values when going live
+- **Never share your API keys** or commit them to version control
+- **Understand the risks** - arbitrage opportunities can disappear quickly, and you may lose money
+- **Test thoroughly** in dry-run mode before enabling live trading
 
-**Auto-Trade Mode** (requires wallet setup):
-1. Complete the setup in `docs/SETUP.md`
-2. Set `mode: "auto_trade"` in `config.yaml`
-3. Run: `python -m src.main`
+## Usage
 
-## 📊 Configuration
+### Detection Only (Safe Mode)
 
-Key settings in `config.yaml`:
-
-```yaml
-# Profit Settings
-min_profit_threshold: 5.0  # Minimum $5 net profit
-position_sizing_strategy: "kelly"  # Use Kelly Criterion
-kelly_fraction: 0.25  # Conservative 1/4 Kelly
-
-# Risk Management
-max_position_size: 1000  # Max $1000 per trade
-max_total_exposure: 5000  # Max $5000 total at risk
-stop_loss_percentage: 0.05  # 5% stop loss
-
-# Execution
-mode: "alert"  # "alert" or "auto_trade"
-gas_price_limit: 100  # Max 100 gwei
-```
-
-See `config.yaml` for all available options.
-
-## 📈 Expected Performance
-
-### Opportunity Frequency
-- **High Volatility Markets**: 10-20 opportunities/day
-- **Normal Markets**: 3-10 opportunities/day
-- **Low Volatility**: 1-5 opportunities/day
-
-### Profit Ranges (After Costs)
-- **YES/NO Imbalance**: 0.5-2% per trade (most reliable)
-- **Cross-Market**: 0.5-3% per trade (dependent on liquidity)
-- **Correlated Events**: 1-5% per trade (higher risk)
-- **Multi-Leg**: 2-8% per trade (complex, higher risk)
-
-### Risk Factors
-- **Gas Costs**: Can eliminate small opportunities on Polygon
-- **Slippage**: Larger trades may experience price impact
-- **Execution Speed**: Opportunities may disappear quickly
-- **Market Resolution**: Some arbitrage requires holding to resolution
-
-## 🔒 Safety & Limitations
-
-### Safety Features
-- **Alert Mode Default**: No trades executed without explicit configuration
-- **Dry Run Mode**: Test execution logic without real transactions
-- **Risk Limits**: Multiple layers of position size and exposure limits
-- **Stop Losses**: Automatic protection against unexpected losses
-
-### Limitations
-- **Not Real-Time Yet**: Current implementation uses mock Polymarket API
-- **Gas Costs**: Must be factored into all trades
-- **Liquidity**: Some opportunities may have insufficient liquidity
-- **Market Risk**: Events can resolve unexpectedly
-- **Smart Contract Risk**: Polygon/Polymarket smart contract risks
-
-### ⚠️ Important Warnings
-- **START IN ALERT MODE**: Always test thoroughly before enabling auto-trade
-- **TEST WITH SMALL AMOUNTS**: Start with minimal capital
-- **MONITOR CLOSELY**: Check logs and notifications regularly  
-- **UNDERSTAND RISKS**: Arbitrage is not risk-free
-- **API LIMITATIONS**: Current implementation uses mock API (requires real integration)
-
-## 📚 Documentation
-
-- **[SETUP.md](docs/SETUP.md)**: Detailed setup instructions for Polymarket API, wallet, and notifications
-- **[STRATEGIES.md](docs/STRATEGIES.md)**: In-depth explanation of each arbitrage strategy with examples
-- **[API.md](docs/API.md)**: API reference and integration guide
-- **[DASHBOARD.md](docs/DASHBOARD.md)**: Web dashboard usage and features
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**: Production deployment guides (Docker, VPS, Kubernetes)
-- **[TESTING.md](docs/TESTING.md)**: Testing methodology and examples
-
-## 🏗️ Architecture
-
-```
-src/
-├── main.py                 # Main orchestrator
-├── config.py              # Configuration management
-├── market/                # Market data and API
-│   ├── polymarket_api.py  # REST API client
-│   ├── websocket_client.py # WebSocket client
-│   └── market_data.py     # Data models
-├── arbitrage/             # Arbitrage detection
-│   ├── detector.py        # Main detection engine
-│   ├── scorer.py          # Opportunity ranking
-│   └── strategies/        # Strategy implementations
-├── execution/             # Trade execution
-│   ├── executor.py        # Trade execution
-│   ├── position_sizing.py # Kelly Criterion
-│   └── risk_manager.py    # Risk management
-├── analytics/             # Performance tracking
-│   ├── logger.py          # Logging system
-│   └── performance.py     # Metrics calculation
-└── notifications/         # Alert system
-    ├── discord.py
-    └── telegram.py
-```
-
-## 🧪 Testing
-
-Run tests:
-```bash
-# All tests
-pytest tests/
-
-# With coverage report
-pytest --cov=src --cov-report=html tests/
-
-# View coverage
-open htmlcov/index.html
-```
-
-Run linters:
-```bash
-# Code formatting
-black src/ tests/
-
-# Linting
-flake8 src/ tests/
-
-# Type checking
-mypy src/
-```
-
-See [TESTING.md](docs/TESTING.md) for detailed testing guide.
-
-## 🐳 Docker Deployment
+Run the bot to detect opportunities without trading:
 
 ```bash
-# Build image
-docker build -t polymarket-bot .
-
-# Run with Docker Compose
-docker-compose up -d
-
-# View logs
-docker-compose logs -f bot
-
-# Stop
-docker-compose down
+python main.py
 ```
 
-See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment guide.
+By default, auto-trading is disabled. The bot will only alert you to opportunities.
 
-## 🤝 Contributing
+### Demo Modes
 
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+Test arbitrage detection with mock data:
+```bash
+python demo.py
+```
 
-## 📝 License
+Test trade execution in dry-run mode:
+```bash
+python demo_trading.py
+```
 
-MIT License - see LICENSE file for details
+### Enable Automatic Trading
 
-## 🔗 Resources
+⚠️ **WARNING: Only enable auto-trading after thorough testing!**
 
-- [Polymarket](https://polymarket.com/)
-- [Polymarket API Docs](https://docs.polymarket.com/)
-- [Kelly Criterion](https://en.wikipedia.org/wiki/Kelly_criterion)
-- [Polygon Network](https://polygon.technology/)
+1. First, test in dry-run mode:
+```bash
+# In .env file:
+AUTO_TRADING_ENABLED=true
+DRY_RUN=true
+MAX_TRADE_SIZE=10.0
 
-## ⚖️ Disclaimer
+python main.py
+```
 
-This software is for educational and research purposes. Trading and arbitrage involve substantial risk of loss. The authors are not responsible for any financial losses incurred through use of this software. Always conduct your own research and risk assessment before trading with real funds.
+2. Once confident, enable live trading (at your own risk):
+```bash
+# In .env file:
+AUTO_TRADING_ENABLED=true
+DRY_RUN=false
+MAX_TRADE_SIZE=50.0  # Start small!
+POLYMARKET_API_KEY=your_key
+POLYMARKET_PRIVATE_KEY=your_key
 
-## 📧 Support
+python main.py
+```
 
-For questions and support:
-- Open an issue on GitHub
-- Check existing documentation
-- Review example configurations
+### Programmatic Usage
 
----
+```python
+import asyncio
+from main import PolymarketArbitrageBot
 
-**Remember**: Arbitrage opportunities are fleeting. Speed, accuracy, and risk management are crucial for success. Start small, monitor closely, and scale gradually.
+async def run_bot():
+    bot = PolymarketArbitrageBot()
+    
+    # Specify market IDs to monitor
+    market_ids = [
+        "0x1234...",  # Replace with actual Polymarket market IDs
+        "0x5678...",
+    ]
+    
+    await bot.start(market_ids)
+
+asyncio.run(run_bot())
+```
+
+### Getting Market IDs
+
+To find Polymarket market IDs:
+1. Visit [Polymarket](https://polymarket.com)
+2. Navigate to a market
+3. Extract the market ID from the URL or use the Polymarket API
+
+## Architecture
+
+### Core Components
+
+1. **polymarket_client.py**: WebSocket client for real-time Polymarket data
+   - Manages WebSocket connections
+   - Handles market subscriptions
+   - Processes price updates
+
+2. **arbitrage_detector.py**: Arbitrage detection algorithms
+   - Cross-market arbitrage detection
+   - YES/NO imbalance detection
+   - Multi-leg arbitrage detection
+
+3. **trade_executor.py**: Automatic trade execution (NEW!)
+   - Generates optimal orders for each arbitrage type
+   - Executes trades via Polymarket API
+   - Tracks execution history and statistics
+   - Supports dry-run mode for safe testing
+
+4. **main.py**: Main application logic
+   - Coordinates WebSocket client and detector
+   - Manages market subscriptions
+   - Alerts on opportunities
+   - Executes trades when auto-trading is enabled
+
+## Arbitrage Strategies
+
+### 1. Cross-Market Arbitrage
+Exploits pricing differences across markets for the same event:
+```
+Market A: Event outcome X at 0.45
+Market B: Event outcome Y at 0.45
+Total cost: 0.90 (10% profit if outcomes are mutually exclusive)
+```
+
+### 2. YES/NO Imbalance Arbitrage
+Exploits pricing inefficiencies within a single market:
+```
+Market: Question about event
+YES price: 0.48
+NO price: 0.48
+Total cost: 0.96 (4% guaranteed profit)
+```
+
+### 3. Multi-Leg Arbitrage
+Exploits opportunities across 3+ related markets:
+```
+Event with 3 outcomes:
+Outcome A: 0.30
+Outcome B: 0.35
+Outcome C: 0.30
+Total cost: 0.95 (5% profit if outcomes are exhaustive)
+```
+
+## Example Output
+
+### Detection Only Mode
+```
