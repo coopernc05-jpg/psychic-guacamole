@@ -9,6 +9,7 @@ Authentication is optional for read-only endpoints.
 """
 
 import asyncio
+import json
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from loguru import logger
@@ -378,7 +379,6 @@ class PolymarketAPIClient:
                 
                 # Parse JSON string if necessary
                 if isinstance(outcome_prices, str):
-                    import json
                     try:
                         outcome_prices = json.loads(outcome_prices)
                     except json.JSONDecodeError:
