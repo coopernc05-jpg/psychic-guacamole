@@ -9,6 +9,7 @@ Authentication is optional for read-only endpoints.
 """
 
 import asyncio
+import json
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from loguru import logger
@@ -375,6 +376,14 @@ class PolymarketAPIClient:
             # Fall back to Gamma API prices if CLOB prices unavailable
             if not prices_from_clob:
                 outcome_prices = data.get("outcomePrices", data.get("prices", []))
+                
+                # Parse JSON string if necessary
+                if isinstance(outcome_prices, str):
+                    try:
+                        outcome_prices = json.loads(outcome_prices)
+                    except json.JSONDecodeError:
+                        outcome_prices = []
+                
                 if outcome_prices and len(outcome_prices) >= 2:
                     yes_price = float(outcome_prices[0]) if outcome_prices[0] else 0.5
                     no_price = float(outcome_prices[1]) if outcome_prices[1] else 0.5
