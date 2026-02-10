@@ -22,6 +22,86 @@ A real-time arbitrage detection and automatic trading system for Polymarket that
 - **Execution Tracking**: Comprehensive logging and statistics for all trades
 
 ## Installation
+# Polymarket Arbitrage Bot
+
+A comprehensive arbitrage detection and execution bot for Polymarket that **maximizes profit** through multiple arbitrage strategies, optimal position sizing, and automated risk management.
+
+## 🎯 Features
+
+### Arbitrage Detection Strategies
+- **Cross-Market Arbitrage**: Detects price discrepancies for the same event across different markets
+- **YES/NO Imbalance Arbitrage**: Finds opportunities where YES + NO prices ≠ 1.00
+- **Multi-Leg Arbitrage**: Identifies complex arbitrage chains across 3+ related markets
+- **Correlated Event Arbitrage**: Detects mispricing in related events with dependencies
+
+### Profit Maximization Engine
+- **Kelly Criterion** position sizing for optimal long-term growth
+- Opportunity ranking by expected profit × confidence × capital efficiency
+- Real-time gas cost calculation and profitability checks
+- Slippage protection and limit order support
+- Configurable minimum profit thresholds
+
+### Real-time Monitoring
+- WebSocket integration for live price feeds
+- Simultaneous monitoring of 100+ markets
+- Low-latency detection (<500ms)
+- Event-driven architecture
+
+### Risk Management
+- Per-trade and total exposure limits
+- Automatic stop-loss and profit-taking
+- Position age monitoring
+- Portfolio diversification tracking
+- Comprehensive risk metrics
+
+### Analytics & Performance Tracking
+- Complete opportunity and execution logging
+- Performance metrics: P&L, ROI, Sharpe ratio, win rate
+- Market efficiency statistics
+- Daily performance reports
+- **Web Dashboard**: Real-time visualization with Chart.js
+
+### Notifications
+- Discord webhook integration
+- Telegram bot support
+- Alerts for opportunities, executions, and errors
+
+### Production Infrastructure
+- **Docker Support**: Containerized deployment with Docker Compose
+- **CI/CD Pipeline**: Automated testing and deployment via GitHub Actions
+- **Health Monitoring**: Health check endpoints and Prometheus metrics
+- **Centralized Logging**: Log rotation and structured logging
+
+## 🚀 Quick Start
+
+### Installation
+
+#### Option 1: Docker (Recommended for Production)
+
+1. Clone the repository:
+```bash
+git clone https://github.com/coopernc05-jpg/psychic-guacamole.git
+cd psychic-guacamole
+```
+
+2. Configure the bot:
+```bash
+cp .env.example .env
+# Edit .env with your API keys and settings
+```
+
+3. Start with Docker Compose:
+```bash
+docker-compose up -d
+```
+
+4. View logs and access dashboard:
+```bash
+docker-compose logs -f bot
+# Dashboard: http://localhost:5000
+```
+
+#### Option 2: Local Development
 
 1. Clone the repository:
 ```bash
@@ -36,6 +116,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
 3. Install dependencies:
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
@@ -213,115 +294,3 @@ Total cost: 0.95 (5% profit if outcomes are exhaustive)
 
 ### Detection Only Mode
 ```
-================================================================================
-🚨 ARBITRAGE OPPORTUNITY DETECTED!
-Type: yes_no_imbalance
-Expected Profit: 3.5000%
-Markets Involved: 1
-Details: {
-  'event_name': 'Presidential Election Winner',
-  'yes_ask': 0.475,
-  'no_ask': 0.490,
-  'total_cost': 0.965,
-  'strategy': 'Buy both YES and NO'
-}
-================================================================================
-ℹ️  Auto-trading is DISABLED - no trade executed
-```
-
-### Auto-Trading Enabled (Dry-Run)
-```
-================================================================================
-🚨 ARBITRAGE OPPORTUNITY DETECTED!
-Type: yes_no_imbalance
-Expected Profit: 3.0000%
-Markets Involved: 1
-Details: {...}
-================================================================================
-⚡ Auto-trading is ENABLED - executing trade...
-DRY RUN: Simulating order execution
-✅ Trade executed successfully!
-   Invested: $100.00
-   Expected Return: $103.00
-   Expected Profit: $3.00
-```
-
-## Development
-
-### Project Structure
-```
-psychic-guacamole/
-├── main.py                   # Main application with auto-trading
-├── polymarket_client.py      # WebSocket client
-├── arbitrage_detector.py     # Arbitrage detection logic
-├── trade_executor.py         # Automatic trade execution (NEW!)
-├── demo.py                   # Detection demo with mock data
-├── demo_trading.py           # Trading demo (dry-run mode)
-├── test_arbitrage.py         # Unit tests for detection
-├── test_trade_executor.py    # Unit tests for trading
-├── requirements.txt          # Python dependencies
-├── .env.example             # Example configuration
-└── README.md                # Documentation
-```
-
-### Testing
-
-Run all tests:
-```bash
-python test_arbitrage.py      # Test arbitrage detection
-python test_trade_executor.py # Test trade execution
-```
-
-Test with demos:
-```bash
-python demo.py                # Test detection with mock data
-python demo_trading.py        # Test trading in dry-run mode
-```
-
-## Important Notes
-
-### Risk Disclaimer
-- ⚠️ **USE AT YOUR OWN RISK** - This bot involves real money when live trading is enabled
-- Arbitrage opportunities may disappear before trades complete
-- You can lose money due to:
-  - Transaction fees and gas costs
-  - Slippage (price changes during execution)
-  - Execution delays
-  - Market volatility
-  - Software bugs or errors
-- **Always test in dry-run mode first**
-- **Start with small trade sizes**
-- Past performance does not guarantee future results
-- This is for educational and research purposes
-
-### Trading Limitations
-- Requires Polymarket API key for live trading
-- WebSocket connection stability depends on network
-- Does not account for all costs:
-  - Transaction fees (typically 2%)
-  - Gas costs (on Polygon network)
-  - Slippage
-  - Market liquidity constraints
-- Orders may not fill at expected prices
-- Opportunities may vanish before execution completes
-
-### Best Practices
-1. **Always start with `DRY_RUN=true`**
-2. **Test thoroughly** with small amounts before scaling up
-3. **Monitor actively** - don't leave the bot running unattended initially
-4. **Set conservative limits** on `MAX_TRADE_SIZE`
-5. **Understand the markets** you're trading
-6. **Keep API keys secure** - never commit them to version control
-7. **Be prepared to lose money** - only trade what you can afford to lose
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues, questions, or contributions, please open an issue on GitHub.

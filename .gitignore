@@ -8,16 +8,57 @@ venv/
 env/
 ENV/
 .env
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
 
 # IDE
 .vscode/
 .idea/
-*.swp
+*.swphttps://github.com/coopernc05-jpg/psychic-guacamole/pull/1/conflict?name=.env.example&base_oid=6a27210c6d13e9d8449f4b0454a3a00690115058&head_oid=bf5ad6a907022d6b00ae50df0256a319da75ab12
 *.swo
+*~
+
+# Environment Variables
+.env
 
 # Logs
+logs/
 *.log
+
+# Data
+data/
+*.db
+*.sqlite
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
