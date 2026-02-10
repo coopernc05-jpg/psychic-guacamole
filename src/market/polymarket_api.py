@@ -375,6 +375,15 @@ class PolymarketAPIClient:
             # Fall back to Gamma API prices if CLOB prices unavailable
             if not prices_from_clob:
                 outcome_prices = data.get("outcomePrices", data.get("prices", []))
+                
+                # Parse JSON string if necessary
+                if isinstance(outcome_prices, str):
+                    import json
+                    try:
+                        outcome_prices = json.loads(outcome_prices)
+                    except json.JSONDecodeError:
+                        outcome_prices = []
+                
                 if outcome_prices and len(outcome_prices) >= 2:
                     yes_price = float(outcome_prices[0]) if outcome_prices[0] else 0.5
                     no_price = float(outcome_prices[1]) if outcome_prices[1] else 0.5

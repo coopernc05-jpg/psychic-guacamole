@@ -214,3 +214,73 @@ async def test_api_urls(api_client):
     """Test that API URLs are correctly configured."""
     assert api_client.clob_url == "https://clob.polymarket.com"
     assert api_client.gamma_url == "https://gamma-api.polymarket.com"
+
+
+@pytest.mark.asyncio
+async def test_parse_market_with_string_outcome_prices(api_client):
+    """Test parsing market data when outcomePrices is a JSON string."""
+    # This is the issue we're fixing - Gamma API sometimes returns outcomePrices as a string
+    market_with_string_prices = {
+        "conditionId": "0xabc123",
+        "question": "Will the market parse string prices?",
+        "description": "Testing string-formatted outcomePrices",
+        "category": "Test",
+        "clobTokenIds": [],
+        "outcomePrices": "[0.62, 0.38]",  # JSON string instead of list
+        "volume24hr": "10000",
+        "liquidity": "5000",
+        "closed": False,
+        "resolved": False,
+        "accepting_orders": True,
+        "endDate": "2026-12-31T23:59:59Z",
+    }
+
+    # Mock get_order_book to return None (CLOB unavailable)
+    with patch.object(
+        api_client, "get_order_book", new_callable=AsyncMock
+    ) as mock_book:
+        mock_book.return_value = None
+
+        market = await api_client._parse_market_with_prices(market_with_string_prices)
+
+        assert market is not None
+        assert market.market_id == "0xabc123"
+        assert market.question == "Will the market parse string prices?"
+        # The key assertion: prices should be parsed correctly from the JSON string
+        assert market.yes_price == 0.62
+        assert market.no_price == 0.38
+        # Check that bid/ask spreads were estimated
+        assert market.yes_bid < market.yes_price < market.yes_ask
+        assert market.no_bid < market.no_price < market.no_ask
+
+
+@pytest.mark.asyncio
+async def test_parse_market_with_invalid_json_string(api_client):
+    """Test parsing market data when outcomePrices is an invalid JSON string."""
+    market_with_invalid_string = {
+        "conditionId": "0xdef456",
+        "question": "Will the market handle invalid JSON?",
+        "description": "Testing invalid JSON string",
+        "category": "Test",
+        "clobTokenIds": [],
+        "outcomePrices": "invalid json [",  # Invalid JSON string
+        "volume24hr": "10000",
+        "liquidity": "5000",
+        "closed": False,
+        "resolved": False,
+        "accepting_orders": True,
+        "endDate": "2026-12-31T23:59:59Z",
+    }
+
+    # Mock get_order_book to return None (CLOB unavailable)
+    with patch.object(
+        api_client, "get_order_book", new_callable=AsyncMock
+    ) as mock_book:
+        mock_book.return_value = None
+
+        market = await api_client._parse_market_with_prices(market_with_invalid_string)
+
+        assert market is not None
+        # Should fall back to default prices when JSON parsing fails
+        assert market.yes_price == 0.5
+        assert market.no_price == 0.5
