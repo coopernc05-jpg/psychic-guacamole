@@ -74,7 +74,8 @@ class ArbitrageDetector:
         if "time_based" in config.strategies:
             self.strategies.append(
                 TimeBasedStrategy(
-                    min_profit_pct=config.min_arbitrage_percentage, time_window_hours=24.0
+                    min_profit_pct=config.min_arbitrage_percentage,
+                    time_window_hours=24.0,
                 )
             )
 
