@@ -1,73 +1,138 @@
 # Polymarket Arbitrage Bot Configuration
 
-# Profit Maximization Settings
-min_profit_threshold: 5.0  # Minimum net profit in USD
-position_sizing_strategy: "kelly"  # kelly, fixed, percentage
-kelly_fraction: 0.25  # Fraction of Kelly to use (0.25 = quarter Kelly)
-max_position_size: 1000  # Max USD per trade
-max_total_exposure: 5000  # Max total USD at risk
+# Trading Configuration
+trading:
+  starting_capital: 23.71
+  risk_profile: aggressive  # conservative, balanced, aggressive
+  max_position_pct: 40
+  max_simultaneous_positions: 3
+  stop_loss_pct: 15
 
-# Arbitrage Detection
+# Strategy Configuration
 strategies:
+  yes_no_imbalance:
+    enabled: true
+    min_profit_pct: 0.3
+    max_price_sum: 0.997
+    min_price_sum: 0.7
+  
+  cross_market:
+    enabled: true
+    min_profit_pct: 0.5
+  
+  order_book_spread:
+    enabled: true
+    min_spread_pct: 2.0
+    min_profit_pct: 0.5
+  
+  multi_leg:
+    enabled: true
+    min_profit_pct: 1.0
+    max_legs: 3
+  
+  correlated_events:
+    enabled: true
+    min_profit_pct: 0.8
+    correlation_threshold: 0.85
+  
+  time_based:
+    enabled: true
+    min_profit_pct: 0.6
+    time_window_hours: 24
+
+# Market Filters
+market_filters:
+  min_liquidity: 500
+  min_volume_24h: 1000
+  max_days_to_expiration: 90
+  excluded_categories: []
+  only_active: true
+
+# Execution Settings
+execution:
+  order_type: market  # market or limit
+  max_slippage_pct: 0.5
+  retry_attempts: 3
+  retry_delay_seconds: 2
+  gas_price_gwei: auto
+
+# Monitoring
+monitoring:
+  update_interval_seconds: 5
+  hot_market_interval_seconds: 1
+  hot_market_volume_threshold: 10000
+
+# Notifications
+notifications:
+  discord:
+    enabled: true
+    webhook_url: ${DISCORD_WEBHOOK_URL}
+    notify_opportunities: true
+    notify_trades: true
+    notify_errors: true
+    daily_summary: true
+  
+  telegram:
+    enabled: false
+    bot_token: ${TELEGRAM_BOT_TOKEN}
+    chat_id: ${TELEGRAM_CHAT_ID}
+
+# Logging
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  file: logs/bot.log
+  max_size_mb: 100
+  backup_count: 5
+
+# Legacy settings for backward compatibility
+min_profit_threshold: 5.0
+position_sizing_strategy: "kelly"
+kelly_fraction: 0.25
+max_position_size: 1000
+max_total_exposure: 5000
+strategies_list:
   - cross_market
   - yes_no_imbalance
   - multi_leg
   - correlated_events
-min_arbitrage_percentage: 0.5  # Minimum 0.5% profit margin
-
-# Market Monitoring
+  - order_book_spread
+  - time_based
+min_arbitrage_percentage: 0.5
 websocket_enabled: true
-markets_to_monitor: "all"  # "all" or list specific categories like ["politics", "sports"]
-refresh_interval: 1  # seconds for non-websocket updates
-max_markets: 100  # Maximum number of markets to monitor simultaneously
-
-# Risk Management
-max_slippage: 0.02  # 2% maximum slippage
-safety_margin: 1.5  # Profit must be 1.5x costs
-stop_loss_percentage: 0.05  # 5% stop loss
-max_position_age_hours: 24  # Auto-close positions after 24 hours
-
-# Execution
-mode: "alert"  # "alert" or "auto_trade"
-gas_price_limit: 100  # Maximum gwei for gas
-order_type: "limit"  # "market" or "limit"
-execution_timeout: 30  # seconds to wait for order execution
-
-# Gas & Fee Settings
+markets_to_monitor: "all"
+refresh_interval: 1
+max_markets: 100
+max_slippage: 0.02
+safety_margin: 1.5
+stop_loss_percentage: 0.05
+max_position_age_hours: 24
+mode: "alert"
+gas_price_limit: 100
+order_type: "limit"
+execution_timeout: 30
 polygon_rpc_url: "https://polygon-rpc.com"
-gas_safety_buffer: 1.2  # Multiply estimated gas by this factor
-
-# Notifications
-discord_webhook: ""  # Discord webhook URL
-telegram_bot_token: ""  # Telegram bot token
-telegram_chat_id: ""  # Telegram chat ID
+gas_safety_buffer: 1.2
+discord_webhook: ""
+telegram_bot_token: ""
+telegram_chat_id: ""
 alert_on_opportunities: true
 alert_on_executions: true
 alert_on_errors: true
-
-# Logging
-log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+log_level: "INFO"
 log_file: "logs/arbitrage_bot.log"
 log_rotation: "100 MB"
-
-# API Settings
 polymarket_api_url: "https://clob.polymarket.com"
 polymarket_ws_url: "wss://ws-subscriptions-clob.polymarket.com/ws"
-api_timeout: 10  # seconds
+api_timeout: 10
 api_retry_attempts: 3
-
-# Performance Tracking
 enable_analytics: true
 analytics_db_path: "data/analytics.db"
 track_missed_opportunities: true
-
-# Dashboard Settings
 dashboard:
   enabled: true
   host: "0.0.0.0"
   port: 5000
   debug: false
-
-# Monitoring & Health
-health_check_interval: 60  # seconds between health checks
-metrics_export: true  # Enable Prometheus metrics export
+health_check_interval: 60
+metrics_export: true
+initial_capital: 23.71

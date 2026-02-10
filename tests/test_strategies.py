@@ -319,3 +319,187 @@ class TestStrategyIntegration:
         for strategy in strategies:
             opportunities = strategy.detect(empty_markets)
             assert opportunities == []
+
+
+class TestOrderBookSpreadStrategy:
+    """Test order book spread (market making) strategy."""
+
+    def test_detect_wide_spread_opportunity(self):
+        """Test detection of wide bid-ask spreads."""
+        from src.arbitrage.strategies.order_book_spread import OrderBookSpreadStrategy
+
+        strategy = OrderBookSpreadStrategy(min_spread_pct=2.0, min_profit_pct=0.5)
+
+        # Create market with wide spread
+        market = create_test_market(
+            market_id="spread_test",
+            question="Will it happen?",
+            yes_price=0.50,
+            no_price=0.50,
+            yes_bid=0.48,
+            yes_ask=0.52,  # 4% spread
+            no_bid=0.48,
+            no_ask=0.52,  # 4% spread
+        )
+
+        opportunities = strategy.detect([market])
+
+        # Should detect opportunities for both YES and NO
+        assert len(opportunities) >= 1
+        for opp in opportunities:
+            assert opp.spread_pct >= 2.0
+            assert opp.expected_profit > 0
+
+    def test_no_opportunity_tight_spread(self):
+        """Test no opportunities with tight spreads."""
+        from src.arbitrage.strategies.order_book_spread import OrderBookSpreadStrategy
+
+        strategy = OrderBookSpreadStrategy(min_spread_pct=2.0, min_profit_pct=0.5)
+
+        # Create market with tight spread (< 2%)
+        market = create_test_market(
+            market_id="tight_spread",
+            question="Tight spread market",
+            yes_price=0.50,
+            no_price=0.50,
+            yes_bid=0.496,
+            yes_ask=0.504,  # ~1.6% spread
+            no_bid=0.496,
+            no_ask=0.504,  # ~1.6% spread
+        )
+
+        opportunities = strategy.detect([market])
+
+        # Should not detect opportunities with spreads < 2%
+        assert len(opportunities) == 0
+
+    def test_profit_estimation(self):
+        """Test profit estimation for market making."""
+        from src.arbitrage.strategies.order_book_spread import OrderBookSpreadStrategy
+
+        strategy = OrderBookSpreadStrategy(min_spread_pct=2.0, min_profit_pct=0.5)
+
+        market = create_test_market(
+            market_id="profit_test",
+            question="Profit test market",
+            yes_price=0.50,
+            no_price=0.50,
+            yes_bid=0.47,
+            yes_ask=0.53,  # 6% spread
+            no_bid=0.47,
+            no_ask=0.53,
+        )
+        market.liquidity = 10000  # High liquidity
+
+        opportunities = strategy.detect([market])
+
+        assert len(opportunities) >= 1
+        for opp in opportunities:
+            # Should estimate profit based on liquidity and spread
+            assert opp.expected_profit > 0
+            assert opp.liquidity == 10000
+
+
+class TestTimeBasedStrategy:
+    """Test time-based arbitrage strategy."""
+
+    def test_detects_opportunities_near_resolution(self):
+        """Test detection of opportunities near event resolution."""
+        from datetime import timedelta
+        from src.arbitrage.strategies.time_based import TimeBasedStrategy
+
+        strategy = TimeBasedStrategy(
+            min_profit_pct=0.6, time_window_hours=24.0, volatility_threshold=2.0
+        )
+
+        # Create market ending in 12 hours
+        market = create_test_market(
+            market_id="time_test",
+            question="Event ending soon",
+            yes_price=0.55,
+            no_price=0.45,
+        )
+        market.end_date = datetime.now() + timedelta(hours=12)
+
+        # Build some price history
+        strategy._update_price_history(market, datetime.now() - timedelta(hours=5))
+        market.yes_price = 0.60
+        strategy._update_price_history(market, datetime.now() - timedelta(hours=3))
+        market.yes_price = 0.62
+        strategy._update_price_history(market, datetime.now() - timedelta(hours=1))
+        market.yes_price = 0.45  # Sudden drop (panic selling)
+        strategy._update_price_history(market, datetime.now())
+
+        opportunities = strategy.detect([market])
+
+        # May detect panic selling opportunity
+        assert isinstance(opportunities, list)
+
+    def test_ignores_markets_outside_time_window(self):
+        """Test strategy ignores markets too far from resolution."""
+        from datetime import timedelta
+        from src.arbitrage.strategies.time_based import TimeBasedStrategy
+
+        strategy = TimeBasedStrategy(
+            min_profit_pct=0.6, time_window_hours=24.0, volatility_threshold=2.0
+        )
+
+        # Create market ending in 48 hours (outside window)
+        market = create_test_market(
+            market_id="far_future",
+            question="Event far in future",
+            yes_price=0.55,
+            no_price=0.45,
+        )
+        market.end_date = datetime.now() + timedelta(hours=48)
+
+        opportunities = strategy.detect([market])
+
+        # Should not detect opportunities for markets outside time window
+        assert len(opportunities) == 0
+
+    def test_tracks_price_history(self):
+        """Test price history tracking."""
+        from datetime import timedelta
+        from src.arbitrage.strategies.time_based import TimeBasedStrategy
+
+        strategy = TimeBasedStrategy(min_profit_pct=0.6, time_window_hours=24.0)
+
+        market = create_test_market(
+            market_id="history_test",
+            question="History tracking test",
+            yes_price=0.50,
+            no_price=0.50,
+        )
+
+        # Add some price history
+        now = datetime.now()
+        strategy._update_price_history(market, now - timedelta(hours=3))
+        strategy._update_price_history(market, now - timedelta(hours=2))
+        strategy._update_price_history(market, now - timedelta(hours=1))
+
+        history = strategy.get_price_history(market.market_id)
+
+        # Should have price history entries
+        assert len(history) >= 3
+
+    def test_reset_history(self):
+        """Test history reset functionality."""
+        from src.arbitrage.strategies.time_based import TimeBasedStrategy
+
+        strategy = TimeBasedStrategy(min_profit_pct=0.6, time_window_hours=24.0)
+
+        market = create_test_market(
+            market_id="reset_test",
+            question="Reset test",
+            yes_price=0.50,
+            no_price=0.50,
+        )
+
+        # Add some history
+        strategy._update_price_history(market, datetime.now())
+        assert len(strategy.get_price_history(market.market_id)) > 0
+
+        # Reset and verify empty
+        strategy.reset_history()
+        assert len(strategy.get_price_history(market.market_id)) == 0

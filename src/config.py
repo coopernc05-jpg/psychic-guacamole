@@ -112,8 +112,54 @@ def load_config(config_path: str = "config.yaml") -> Config:
     else:
         yaml_config = {}
 
+    # Flatten nested configuration structure for backward compatibility
+    flattened_config = {}
+
+    # Handle nested trading config
+    if "trading" in yaml_config:
+        trading = yaml_config["trading"]
+        flattened_config["initial_capital"] = trading.get("starting_capital", 23.71)
+        # Map risk profile to position sizing parameters
+        if trading.get("risk_profile") == "aggressive":
+            flattened_config["max_position_size"] = (
+                trading.get("starting_capital", 23.71)
+                * trading.get("max_position_pct", 40)
+                / 100
+            )
+            flattened_config["max_total_exposure"] = (
+                trading.get("starting_capital", 23.71) * 3
+            )  # Allow 3x leverage for aggressive
+        flattened_config["stop_loss_percentage"] = (
+            trading.get("stop_loss_pct", 15) / 100
+        )
+
+    # Handle nested strategy config
+    if "strategies" in yaml_config and isinstance(yaml_config["strategies"], dict):
+        # Build strategy list from enabled strategies
+        enabled_strategies = []
+        for strategy_name, strategy_config in yaml_config["strategies"].items():
+            if strategy_config.get("enabled", True):
+                enabled_strategies.append(strategy_name)
+        flattened_config["strategies"] = enabled_strategies
+    elif "strategies_list" in yaml_config:
+        flattened_config["strategies"] = yaml_config["strategies_list"]
+
+    # Copy other top-level keys
+    for key, value in yaml_config.items():
+        if key not in [
+            "trading",
+            "strategies",
+            "market_filters",
+            "execution",
+            "monitoring",
+            "notifications",
+            "logging",
+        ]:
+            if key not in flattened_config:
+                flattened_config[key] = value
+
     # Environment variables override YAML config
-    return Config(**yaml_config)
+    return Config(**flattened_config)
 
 
 # Global config instance

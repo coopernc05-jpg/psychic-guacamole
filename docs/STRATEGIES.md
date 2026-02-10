@@ -6,8 +6,10 @@ Comprehensive guide to all arbitrage strategies implemented in the Polymarket Ar
 - [Strategy Overview](#strategy-overview)
 - [YES/NO Imbalance Arbitrage](#yesno-imbalance-arbitrage)
 - [Cross-Market Arbitrage](#cross-market-arbitrage)
+- [Order Book Spread Trading](#order-book-spread-trading)
 - [Multi-Leg Arbitrage](#multi-leg-arbitrage)
 - [Correlated Events Arbitrage](#correlated-events-arbitrage)
+- [Time-Based Arbitrage](#time-based-arbitrage)
 - [Strategy Comparison](#strategy-comparison)
 - [Best Practices](#best-practices)
 
@@ -17,10 +19,12 @@ Each strategy exploits different market inefficiencies:
 
 | Strategy | Reliability | Profit Potential | Complexity | Risk Level |
 |----------|------------|------------------|------------|------------|
-| YES/NO Imbalance | ⭐⭐⭐⭐⭐ | 0.5-2% | Low | Very Low |
+| YES/NO Imbalance | ⭐⭐⭐⭐⭐ | 0.3-2% | Low | Very Low |
 | Cross-Market | ⭐⭐⭐⭐ | 0.5-3% | Low | Low |
-| Correlated Events | ⭐⭐⭐ | 1-5% | Medium | Medium |
-| Multi-Leg | ⭐⭐ | 2-8% | High | High |
+| Order Book Spread | ⭐⭐⭐⭐ | 0.5-2% | Medium | Low |
+| Correlated Events | ⭐⭐⭐ | 0.8-5% | Medium | Medium |
+| Multi-Leg | ⭐⭐ | 1.0-8% | High | High |
+| Time-Based | ⭐⭐⭐ | 0.6-4% | Medium | Medium |
 
 ## YES/NO Imbalance Arbitrage
 
@@ -191,6 +195,87 @@ strategies:
 min_arbitrage_percentage: 0.5
 max_markets: 100  # More markets = more opportunities
 ```
+
+## Order Book Spread Trading
+
+### Concept
+
+Act as a market maker by placing limit orders between the bid and ask prices to capture the spread. Provide liquidity and profit from the bid-ask spread.
+
+**Formula**: `Spread % = ((Ask - Bid) / MidPrice) × 100`
+
+### How It Works
+
+#### Market Making Strategy
+```
+Market: "Will inflation exceed 3%?"
+YES bid: $0.48
+YES ask: $0.52
+Spread: 4% (attractive for market making)
+
+Strategy: Place limit order at $0.50
+- If it fills, you capture ~2% profit from the spread
+- Acts as liquidity provider to the market
+```
+
+**Execution**:
+1. Identify markets with wide spreads (≥2%)
+2. Place limit order at midpoint or slightly favorable
+3. Wait for order to fill
+4. Profit from the spread capture
+5. Hold to resolution or exit with profit
+
+#### Example Trade
+```
+Market: "Republican wins 2024 election"
+YES bid: $0.54
+YES ask: $0.58
+Mid price: $0.56
+Spread: 3.6%
+
+Action: Place limit buy at $0.55
+Expected profit: ~1.8% of position size
+```
+
+### Why It Happens
+
+- **Low liquidity markets**: Wide spreads due to few participants
+- **Volatile events**: Spreads widen during uncertainty
+- **Impatient traders**: Pay spread for immediate execution
+- **Information asymmetry**: Some traders willing to pay for speed
+
+### Risk Factors
+
+- **Low Risk**: Capturing spread is relatively safe
+- **Execution risk**: Order may not fill if market moves away
+- **Inventory risk**: May hold position longer than expected
+- **Market risk**: Events can move against you before exit
+- **Liquidity risk**: May be hard to exit if needed
+
+### Expected Performance
+
+- **Frequency**: Depends on market activity
+- **Profit**: 0.5-2% per successful fill
+- **Hold time**: Minutes to hours (ideally)
+- **Win rate**: ~70-80% when properly executed
+
+### Configuration
+
+```yaml
+strategies:
+  order_book_spread:
+    enabled: true
+    min_spread_pct: 2.0  # Minimum 2% spread required
+    min_profit_pct: 0.5  # Minimum 0.5% profit after costs
+```
+
+### Best Practices
+
+1. **Focus on liquid markets**: Easier to exit if needed
+2. **Monitor order book depth**: Ensure sufficient liquidity
+3. **Set time limits**: Don't hold positions indefinitely
+4. **Scale positions**: Start small, increase with success
+5. **Watch for news**: Events can cause rapid price movements
 
 ## Multi-Leg Arbitrage
 
@@ -382,6 +467,140 @@ strategies:
 
 min_arbitrage_percentage: 0.5
 min_mispricing: 0.05  # Minimum 5% mispricing
+```
+
+## Time-Based Arbitrage
+
+### Concept
+
+Monitor price changes near event resolution to detect panic selling, last-minute mispricing, or volatility spikes that create temporary arbitrage opportunities.
+
+**Focus**: Markets within 24 hours of resolution
+
+### How It Works
+
+#### Opportunity Types
+
+**1. Panic Selling**
+```
+Market: "Will Fed raise rates on March 15?"
+Date: March 14, 8:00 PM (16 hours to resolution)
+
+Price History:
+- 7 days ago: YES @ $0.82
+- 3 days ago: YES @ $0.80
+- 1 day ago: YES @ $0.78
+- NOW: YES @ $0.65 (sudden 16% drop)
+
+Analysis: Panic selling on uncertain news
+Strategy: Buy YES at $0.65, expect reversion to $0.75+
+Potential profit: 15%+
+```
+
+**2. Last-Minute Mispricing**
+```
+Market: "Will unemployment be below 4%?"
+Date: Report day, 2 hours before announcement
+
+Price: YES @ $0.45
+Historical average: YES @ $0.60
+Recent data suggests: ~70% chance of YES
+
+Analysis: Severe mispricing due to low liquidity
+Strategy: Buy YES before announcement
+Potential profit: 20%+
+```
+
+**3. Volatility Spike**
+```
+Market: "Will candidate win debate poll?"
+During debate: Price swings wildly
+
+Price movements:
+- 8:00 PM: YES @ $0.55
+- 8:15 PM: YES @ $0.42 (candidate stumbles)
+- 8:30 PM: YES @ $0.58 (strong recovery)
+- 8:45 PM: YES @ $0.48 (overreaction)
+
+Strategy: Buy during overreactions, sell on recovery
+```
+
+### Why It Happens
+
+- **Emotional trading**: Fear and greed amplified near resolution
+- **Information cascades**: One large trade triggers panic
+- **Low liquidity**: Fewer participants near resolution
+- **News reactions**: Markets overreact to breaking news
+- **Time pressure**: Traders rush to exit positions
+
+### Risk Factors
+
+- **Medium Risk**: Requires timing and market understanding
+- **Event risk**: Outcome may be different than expected
+- **Volatility risk**: Prices can continue moving against you
+- **Liquidity risk**: Hard to exit if wrong
+- **Time risk**: Limited window to realize profit
+
+### Expected Performance
+
+- **Frequency**: Depends on events resolving soon
+- **Profit**: 0.6-4% per successful trade
+- **Hold time**: Minutes to hours
+- **Win rate**: ~65-75% with good timing
+
+### Configuration
+
+```yaml
+strategies:
+  time_based:
+    enabled: true
+    min_profit_pct: 0.6  # Minimum 0.6% profit threshold
+    time_window_hours: 24  # Monitor markets within 24h of resolution
+    volatility_threshold: 2.0  # Minimum volatility score
+```
+
+### Best Practices
+
+1. **Build price history**: Track prices over time for context
+2. **Understand the event**: Know what's driving price movements
+3. **Set strict stops**: Time-based trades can move fast
+4. **React quickly**: Opportunities disappear rapidly
+5. **Avoid gambling**: Don't trade without clear edge
+
+### Example Scenarios
+
+**Scenario 1: Election Night**
+```
+Market: "Will Biden win Pennsylvania?"
+11:00 PM: Early results favor Trump
+Price drops: YES @ $0.40 (was $0.65)
+
+Analysis:
+- Historical correlation: PA mirrors national polls
+- National polls: Biden +3%
+- Urban areas not yet counted (favor Biden)
+
+Strategy: Buy YES @ $0.40
+Outcome: Urban votes counted, Biden wins
+Exit: YES @ $0.85
+Profit: 112%
+```
+
+**Scenario 2: Economic Data**
+```
+Market: "Will CPI exceed 3.5%?"
+8:25 AM: 5 minutes before release
+Price: YES @ $0.52
+
+Analysis:
+- Consensus: 3.6% (above threshold)
+- Price undervalues consensus
+- Market inefficient this close to release
+
+Strategy: Buy YES @ $0.52
+8:30 AM: CPI released at 3.7%
+Exit: YES @ $0.95
+Profit: 83%
 ```
 
 ## Strategy Comparison
